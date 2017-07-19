@@ -5,13 +5,14 @@
 # Settings: Change chefServerName and chefServerEndpoint at a minimum
 
 # Required settings
-$global:region              = "eu-west-1"
-$global:chefServerName      = "serverName"
-$global:chefServerEndpoint  = "endpoint" # Provide the FQDN or endpoint; it's the string after 'https://'
+$global:region              = "us-east-1"
+$global:chefServerName      = "JimTestChefAutomate"
+$global:chefServerEndpoint  = "jimtestchefautomate-zmpm8vwr8zl326ru.us-east-1.opsworks-cm.io
+" # Provide the FQDN or endpoint; it's the string after 'https://'
 $global:chefConf            = "c:\chef\client.rb"
 $global:chefCaPath          = "C:\Users\Administrator\.chef\trusted_certs\"
 $global:chefCaFile          = "opsworks-cm-ca-2016-root.pem"
-$global:opensslURI          = "https://slproweb.com/download/Win32OpenSSL_Light-1_1_0e.exe"
+$global:opensslURI          = "https://slproweb.com/download/Win32OpenSSL_Light-1_1_0f.exe"
 
 # Optional settings
 $chefOrganization="default"    # Leave as "default"; do not change. AWS OpsWorks for Chef Automate always creates the organization "default"
@@ -67,7 +68,7 @@ function Wait-NodeAssociated ($associationToken)
 
 function Install-TrustedCert
 {
-    $certificatePEM      = "https://s3-eu-west-1.amazonaws.com/opsworks-cm-" + $region + "-beta-default-assets/misc/opsworks-cm-ca-2016-root.pem"
+    $certificatePEM      = "https://opsworks-com-" + $region + "-prod-default-assets.s3.amazonaws.com/misc/opsworks-cm-ca-2016-root.pem"
     New-Item "$chefCaPath" -type directory
     (New-Object System.Net.WebClient).DownloadFile($certificatePEM, "$chefCaPath$chefCaFile")
 }
