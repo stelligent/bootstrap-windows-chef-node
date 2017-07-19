@@ -1,0 +1,37 @@
+Steps to Set up Chef for Chef Automate on Workspaces
+
+In AWS:
+1. Create IAM User (workspaces-opsworks-user) with the following Policy:
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1500489983000",
+            "Effect": "Allow",
+            "Action": [
+                "opsworks-cm:AssociateNode",
+                "opsworks-cm:DescribeNodeAssociationStatus",
+                "workspaces:Describe*"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}
+2. Download Access Key and Secret Key to a safe place
+3. Create Chef Automate Server
+4. Create Workspace
+
+On Local Machine:
+1. Install ChefDK
+2. Install Starter Kit from Chef Automate Server into Chef directory
+3. Run `berks install` in Chef directory
+4. Run `berks upload` in Chef directory
+
+On Workspace:
+1. Install AWS Tools for Powershell
+2. Install Chef Client
+3. Configure AWS Credentials for workspaces-opsworks-user
+4. Modify aws-chef-associate.ps1 script with appropriate settings (chef server name and endpoint, region)
+5. Run aws-chef-associate.ps1 Powershell script
