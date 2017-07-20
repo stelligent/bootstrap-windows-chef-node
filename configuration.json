@@ -1,0 +1,17 @@
+{
+  "Parameters" : {
+    "ADUser" : "jim",
+    "BundleId": "wsb-v43k2932f",
+    "DirectoryId": "d-906726a6af"
+  },
+  "Tags": [
+    {
+      "Key": "Name",
+      "Value": "JimChefAutomateTest"
+    },
+    {
+      "Key": "RunList",
+      "Value": "chef-client:atom"
+    }
+  ]
+}
