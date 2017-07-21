@@ -1,0 +1,133 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Continuous Delivery CodePipeline that automatically  build, tests, deploys the CS-260 Lab Environment
+Parameters:
+  GitHubToken:
+    Type: String
+    NoEcho: true
+  GitHubUser:
+    Type: String
+    Default: stelligent
+  GitHubRepoName:
+    Type: String
+    Default: bootstrap-windows-chef-node
+  GitHubBranchName:
+    Type: String
+    Default: master
+  S3Bucket:
+    Description: S3 bucket containing the Chef Cookbooks
+    Type: String
+    Default: S3Bucket
+Resources:
+  ManualApprovalStageGroup:
+    Type: "AWS::IAM::Group"
+    Properties:
+      GroupName: ManaulApprovalStageGroup
+      Path: /
+      Policies:
+        -
+          PolicyName: manual-approval-stage-service
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            - Effect: Deny
+              Action:
+              - codepipeline:PutApprovalResult
+              Resource: "*"
+  WorkspaceServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: cloudformation.amazonaws.com
+          Action: sts:AssumeRole
+      Path: /
+      Policies:
+        -
+          PolicyName: rds-service
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                - "workspaces:*"
+                Resource: "*"
+  CodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: codepipeline.amazonaws.com
+          Action: sts:AssumeRole
+      Path: /
+      Policies:
+        -
+          PolicyName: codepipeline-service
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: Allow
+                Action: "*"
+                Resource: "*"
+  MyCodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      ArtifactStore:
+        Location: !Ref "S3Bucket"
+        Type: S3
+      RoleArn: !GetAtt [CodePipelineRole, Arn]
+      Stages:
+        - Name: Commit
+          Actions:
+          - Name: Commit
+            ActionTypeId:
+              Category: Source
+              Owner: ThirdParty
+              Provider: GitHub
+              Version: 1
+            OutputArtifacts:
+              - Name: CS-260
+            Configuration:
+              Owner: !Ref GitHubUser
+              Repo: !Ref GitHubRepoName
+              Branch: !Ref GitHubBranchName
+              OAuthToken: !Ref GitHubToken
+        - Name: Build
+          Actions:
+          - Name: Workspace Provisioning
+            RunOrder: 1
+            ActionTypeId:
+              Category: Deploy
+              Owner: AWS
+              Version: 1
+              Provider: CloudFormation
+            Configuration: {
+                "ActionMode": "CREATE_UPDATE",
+                "Capabilities": "CAPABILITY_IAM",
+                "StackName": "CS-260",
+                "TemplatePath": "CS-260::workspace.yml",
+                "TemplateConfiguration": "CS-260::configuration.json",
+                "RoleArn": {
+                    "Fn::GetAtt": [
+                        "WorkspaceServiceRole",
+                        "Arn"
+                    ]
+                }
+            }
+            InputArtifacts:
+              - Name: CS-260
+        - Name: Production
+          Actions:
+          - Name: Approval
+            ActionTypeId:
+              Category: Approval
+              Owner: AWS
+              Version: 1
+              Provider: Manual
