@@ -30,9 +30,12 @@ function Get-WorkspaceId
 function Get-RunList
 {
   $runlist_obj = Get-WKSTag -ResourceId $workspaceId | Where-Object {$_.Key -eq 'RunList'} | Select-Object -Property Value
-  $runlist_value = $runlist_obj.Value
-  
-  $global:cookbooks = $runlist_value.split(":")
+  if ($runlist_obj -ne $null) {
+    $runlist_value = $runlist_obj.Value 
+    $global:cookbooks = $runlist_value.split(":")
+  } else {
+    $global:cookbooks = $null
+  }
 }
 
 function Download-Cookbooks
@@ -50,20 +53,23 @@ echo "Please wait while we install the required software..."
 Install-Chef
 Get-WorkspaceId
 Get-RunList
-Download-Cookbooks
-Strip-Versions
 
-# Reload PATH so we can find chef-client
-$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+if ($cookbooks -ne $null) {
+  Download-Cookbooks
+  Strip-Versions
 
-$cookbooks.ForEach({
-  # launch the chef client
-  if ($nodeEnvironment)
-  {
-    chef-client -o $_ -E "$nodeEnvironment"
-  }
-  else
-  {
-    chef-client -o $_
-  }
-})
+  # Reload PATH so we can find chef-client
+  $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+
+  $cookbooks.ForEach({
+    # launch the chef client
+    if ($nodeEnvironment)
+    {
+      chef-client -o $_ -E "$nodeEnvironment"
+    }
+    else
+    {
+      chef-client -o $_
+    }
+  })
+}
