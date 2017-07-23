@@ -16,7 +16,7 @@ Parameters:
   S3Bucket:
     Description: S3 bucket containing the Chef Cookbooks
     Type: String
-    Default: snhu-cookbooks
+    Default: snhu-chef
   Runlist:
     Description: Runlist for Workspace
     Type: String
@@ -103,6 +103,7 @@ Resources:
                   - "workspaces:*"
                   - "ssm:*"
                   - "s3:*"
+                  - "ec2:*"
                   - "codepipeline:PutJobSuccessResult"
                   - "codepipeline:PutJobFailureResult"
                 Resource: "*"
@@ -111,13 +112,45 @@ Resources:
                   - "logs:*"
                 Effect: Allow, 
                 Resource: "arn:aws:logs:*:*:*"
+  WorkspaceCreaterLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: snhu-chef
+        S3Key: workspace-lambda.zip
+      Handler: remoteworkspaces.launch_workspace
+      Role: !Ref LambaRole
+      Runtime: python3.6
+      Timeout: 300
+      VpcConfig:
+        SecurityGroupIds:
+          - sg-3e270b4f
+        SubnetIds:
+          - subnet-cba53de7
+          - subnet-be2674f6
   LambdaInstallChefFn:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket: some-bucket
-        S3Key: some-key
-      Handler: remote-workspaces.chef_handler
+        S3Bucket: snhu-chef
+        S3Key: workspace-lambda.zip
+      Handler: remoteworkspaces.install_chef
+      Role: !Ref LambaRole
+      Runtime: python3.6
+      Timeout: 300
+      VpcConfig:
+        SecurityGroupIds:
+          - sg-3e270b4f
+        SubnetIds:
+          - subnet-cba53de7
+          - subnet-be2674f6
+  LambdaExecuteChefFn:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: snhu-chef
+        S3Key: workspace-lambda.zip
+      Handler: remoteworkspaces.execute_chef
       Role: !Ref LambaRole
       Runtime: python3.6
       Timeout: 300
@@ -150,21 +183,35 @@ Resources:
               Repo: !Ref GitHubRepoName
               Branch: !Ref GitHubBranchName
               OAuthToken: !Ref GitHubToken
-        - Name: Build
+        - Name: BuildWorkspace
           Actions:
           - Name: Workspace Provisioning
             RunOrder: 1
             ActionTypeId:
-              Category: Invoke
+              Category: Deploy
               Owner: AWS
               Version: 1
-              Provider: Lambda
+              Provider: CloudFormation
             Configuration: {
-              FunctionName: !Ref WorkspaceCreaterLambda
-              UserParameters: !Ref Runlist
+                "ActionMode": "CREATE_UPDATE",
+                "Capabilities": "CAPABILITY_IAM",
+                "StackName": "WorkspaceBuilder",
+                "TemplatePath": "CS-260::workspace.yml",
+                "TemplateConfiguration": "CS-260::configuration.json",
+                "RoleArn": {
+                    "Fn::GetAtt": [
+                        "WorkspaceServiceRole",
+                        "Arn"
+                    ]
+                },
+                "OutputFileName": "WorkspaceOutput.json" 
             }
             InputArtifacts:
               - Name: CS-260
+            OutputArtifacts:
+              - Name: WorkspaceOutput
+        - Name: ConfigureWorkspace
+          Actions:
           - Name: Install Chef
             RunOrder: 2
             ActionTypeId:
@@ -175,6 +222,18 @@ Resources:
             Configuration: {
               "FunctionName": {
                 "Ref": "LambdaInstallChefFn"
+              }
+            }
+          - Name: Execute Chef
+            RunOrder: 2
+            ActionTypeId:
+              Category: Invoke
+              Owner: AWS
+              Version: 1
+              Provider: Lambda
+            Configuration: {
+              "FunctionName": {
+                "Ref": "LambdaExecuteChefFn"
               }
             }
 
