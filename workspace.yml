@@ -22,3 +22,7 @@ Resources:
       BundleId: !Ref "BundleId"
       DirectoryId: !Ref "DirectoryId"
       UserName: !Ref "ADUser"
+Outputs:
+  workspaceId:
+    Value: !Ref workspace1
+    Description: WorkspaceID
