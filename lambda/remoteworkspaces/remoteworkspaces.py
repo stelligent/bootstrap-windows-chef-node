@@ -2,6 +2,7 @@ import winrm
 import boto3
 import string
 import json
+from behave.__main__ import main as behave_main
 
 code_pipeline = boto3.client('codepipeline')
 client = boto3.client('ssm')
@@ -21,6 +22,12 @@ def get_workspace_public_ip(event, context):
     )
 
     print(output_json_string['Body'].read())
+
+
+
+def execute_tests(event, context):
+  behave_main("features/example.feature")
+
 
 def install_chef(event, context):
     if event['CodePipeline.job']:
@@ -88,7 +95,7 @@ def execute_chef(event, context):
     continue_job_later(job_id, 'Chef execution started...')
 
     response = session.run_ps(command)
-    
+
     print(response.std_err)
     print(response.std_out)
 
@@ -100,54 +107,54 @@ def execute_chef(event, context):
 
 def put_job_success(job, message):
     """Notify CodePipeline of a successful job
-    
+
     Args:
         job: The CodePipeline job ID
         message: A message to be logged relating to the job status
-        
+
     Raises:
         Exception: Any exception thrown by .put_job_success_result()
-    
+
     """
     print('Putting job success')
     print(message)
     code_pipeline.put_job_success_result(jobId=job)
-  
+
 def put_job_failure(job, message):
     """Notify CodePipeline of a failed job
-    
+
     Args:
         job: The CodePipeline job ID
         message: A message to be logged relating to the job status
-        
+
     Raises:
         Exception: Any exception thrown by .put_job_failure_result()
-    
+
     """
     print('Putting job failure')
     print(message)
     code_pipeline.put_job_failure_result(jobId=job, failureDetails={'message': message, 'type': 'JobFailed'})
- 
+
 def continue_job_later(job, message):
     """Notify CodePipeline of a continuing job
-    
+
     This will cause CodePipeline to invoke the function again with the
     supplied continuation token.
-    
+
     Args:
         job: The JobID
         message: A message to be logged relating to the job status
         continuation_token: The continuation token
-        
+
     Raises:
         Exception: Any exception thrown by .put_job_success_result()
-    
+
     """
-    
+
     # Use the continuation token to keep track of any job execution state
     # This data will be available when a new job is scheduled to continue the current execution
     continuation_token = json.dumps({'previous_job_id': job})
-    
+
     print('Putting job continuation')
     print(message)
     code_pipeline.put_job_success_result(jobId=job, continuationToken=continuation_token)
