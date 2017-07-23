@@ -3,22 +3,19 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: Workspace Template
 
 Parameters:
-  ADUser: 
+  ADUser:
     Description: ADUser to attach to Workspace
     Type: String
-    #Default: jim
   DirectoryId:
     Description: AD Server to get users from
     Type: String
-    #Default: d-906726a6af
   BundleId:
     Description: Bundle to create Workspace from
     Type: String
-    #Default: wsb-v43k2932f
 Resources:
-  workspace1: 
+  workspace1:
     Type: "AWS::WorkSpaces::Workspace"
-    Properties: 
+    Properties:
       BundleId: !Ref "BundleId"
       DirectoryId: !Ref "DirectoryId"
       UserName: !Ref "ADUser"

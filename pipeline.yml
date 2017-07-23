@@ -16,7 +16,11 @@ Parameters:
   S3Bucket:
     Description: S3 bucket containing the Chef Cookbooks
     Type: String
-    Default: S3Bucket
+    Default: snhu-cookbooks
+  Runlist:
+    Description: Runlist for Workspace
+    Type: String
+    Default: "snhu-eclipse"
 Resources:
   ManualApprovalStageGroup:
     Type: "AWS::IAM::Group"
@@ -151,22 +155,13 @@ Resources:
           - Name: Workspace Provisioning
             RunOrder: 1
             ActionTypeId:
-              Category: Deploy
+              Category: Invoke
               Owner: AWS
               Version: 1
-              Provider: CloudFormation
+              Provider: Lambda
             Configuration: {
-                "ActionMode": "CREATE_UPDATE",
-                "Capabilities": "CAPABILITY_IAM",
-                "StackName": "CS-260",
-                "TemplatePath": "CS-260::workspace.yml",
-                "TemplateConfiguration": "CS-260::configuration.json",
-                "RoleArn": {
-                    "Fn::GetAtt": [
-                        "WorkspaceServiceRole",
-                        "Arn"
-                    ]
-                }
+              FunctionName: !Ref WorkspaceCreaterLambda
+              UserParameters: !Ref Runlist
             }
             InputArtifacts:
               - Name: CS-260
