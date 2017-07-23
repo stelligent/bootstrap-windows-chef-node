@@ -210,32 +210,32 @@ Resources:
               - Name: CS-260
             OutputArtifacts:
               - Name: WorkspaceOutput
-        - Name: ConfigureWorkspace
-          Actions:
-          - Name: Install Chef
-            RunOrder: 2
-            ActionTypeId:
-              Category: Invoke
-              Owner: AWS
-              Version: 1
-              Provider: Lambda
-            Configuration: {
-              "FunctionName": {
-                "Ref": "LambdaInstallChefFn"
-              }
-            }
-          - Name: Execute Chef
-            RunOrder: 2
-            ActionTypeId:
-              Category: Invoke
-              Owner: AWS
-              Version: 1
-              Provider: Lambda
-            Configuration: {
-              "FunctionName": {
-                "Ref": "LambdaExecuteChefFn"
-              }
-            }
+        # - Name: ConfigureWorkspace
+        #   Actions:
+        #   - Name: Install Chef
+        #     RunOrder: 1
+        #     ActionTypeId:
+        #       Category: Invoke
+        #       Owner: AWS
+        #       Version: 1
+        #       Provider: Lambda
+        #     Configuration: {
+        #       "FunctionName": {
+        #         "Ref": "LambdaInstallChefFn"
+        #       }
+        #     }
+        #   - Name: Execute Chef
+        #     RunOrder: 2
+        #     ActionTypeId:
+        #       Category: Invoke
+        #       Owner: AWS
+        #       Version: 1
+        #       Provider: Lambda
+        #     Configuration: {
+        #       "FunctionName": {
+        #         "Ref": "LambdaExecuteChefFn"
+        #       }
+        #     }
 
         - Name: Production
           Actions:
