@@ -135,7 +135,7 @@ Resources:
         S3Bucket: snhu-chef
         S3Key: workspace-lambda.zip
       Handler: remoteworkspaces.install_chef
-      Role: !Ref LambaRole
+      Role: !Ref LambdaRole
       Runtime: python3.6
       Timeout: 300
       VpcConfig:
@@ -151,7 +151,7 @@ Resources:
         S3Bucket: snhu-chef
         S3Key: workspace-lambda.zip
       Handler: remoteworkspaces.execute_chef
-      Role: !Ref LambaRole
+      Role: !Ref LambdaRole
       Runtime: python3.6
       Timeout: 300
       VpcConfig:
