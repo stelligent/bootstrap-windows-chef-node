@@ -110,7 +110,7 @@ Resources:
               -
                 Action: 
                   - "logs:*"
-                Effect: Allow, 
+                Effect: Allow
                 Resource: "arn:aws:logs:*:*:*"
   WorkspaceCreaterLambda:
     Type: AWS::Lambda::Function
