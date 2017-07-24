@@ -1,0 +1,15 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo Installing pre-reqs
+      - pip3 install pywinrm boto3 behave
+  build:
+    commands:
+      - echo Started on `date`
+      - echo Installing Chef...
+      - python3 scripts/tests.py
+  post_build:
+    commands:
+      - echo Chef Install completed on `date`

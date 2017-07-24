@@ -80,7 +80,7 @@ Resources:
                 Effect: Allow
                 Action: "*"
                 Resource: "*"
-  LambdaRole:
+  CodeBuildRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -88,12 +88,12 @@ Resources:
         Statement:
           Effect: Allow
           Principal:
-            Service: lambda.amazonaws.com
+            Service: codebuild.amazonaws.com
           Action: sts:AssumeRole
       Path: /
       Policies:
         -
-          PolicyName: lambda-workspaces-ssm
+          PolicyName: codebuild-workspaces-ssm
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -113,46 +113,51 @@ Resources:
                   - "logs:*"
                 Effect: Allow
                 Resource: "arn:aws:logs:*:*:*"
-  WorkspaceCreaterLambda:
-    Type: AWS::Lambda::Function
+  InstallChefProject:
+    Type: AWS::CodeBuild::Project
     Properties:
-      Code:
-        S3Bucket: snhu-chef
-        S3Key: remoteworkspaces.zip
-      Handler: remoteworkspaces.launch_workspace
-      Role: !GetAtt LambdaRole.Arn
-      Runtime: python3.6
-      Timeout: 300
-  LambdaGetWorkspaceId:
-    Type: AWS::Lambda::Function
+      Description: Codebuild project to install Chef on Workspace
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/python:3.3.6
+      Source:
+        BuildSpec: buildspec_install_chef.yml
+        Type: CODEPIPELINE
+      TimeoutInMinutes: 30
+  ExecuteChefProject:
+    Type: AWS::CodeBuild::Project
     Properties:
-      Code:
-        S3Bucket: snhu-chef
-        S3Key: remoteworkspaces.zip
-      Handler: remoteworkspaces.get_workspace_public_ip
-      Role: !GetAtt LambdaRole.Arn
-      Runtime: python3.6
-      Timeout: 300
-  LambdaInstallChefFn:
-    Type: AWS::Lambda::Function
+      Description: Codebuild project to install Chef on Workspace
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/python:3.3.6
+      Source:
+        BuildSpec: buildspec_execute_chef.yml
+        Type: CODEPIPELINE
+      TimeoutInMinutes: 30
+  TestChefProject:
+    Type: AWS::CodeBuild::Project
     Properties:
-      Code:
-        S3Bucket: snhu-chef
-        S3Key: remoteworkspaces.zip
-      Handler: remoteworkspaces.install_chef
-      Role: !GetAtt LambdaRole.Arn
-      Runtime: python3.6
-      Timeout: 300
-  LambdaExecuteChefFn:
-    Type: AWS::Lambda::Function
-    Properties:
-      Code:
-        S3Bucket: snhu-chef
-        S3Key: remoteworkspaces.zip
-      Handler: remoteworkspaces.execute_chef
-      Role: !GetAtt LambdaRole.Arn
-      Runtime: python3.6
-      Timeout: 300
+      Description: Codebuild project to install Chef on Workspace
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/python:3.3.6
+      Source:
+        BuildSpec: buildspec_tests.yml
+        Type: CODEPIPELINE
+      TimeoutInMinutes: 30
   MyCodePipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
@@ -208,27 +213,36 @@ Resources:
             - Name: InstallChef
               RunOrder: 1
               ActionTypeId:
-                Category: Invoke
+                Category: Build
                 Owner: AWS
                 Version: 1
-                Provider: Lambda
-              Configuration: {
-                "FunctionName": {
-                  "Ref": "LambdaInstallChefFn"
-                 }
-              }
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref InstallChefProject
+              InputArtifacts:
+                - Name: CS-260
             - Name: ExecuteChef
               RunOrder: 2
               ActionTypeId:
-                Category: Invoke
+                Category: Build
                 Owner: AWS
                 Version: 1
-                Provider: Lambda
-              Configuration: {
-                "FunctionName": {
-                  "Ref": "LambdaExecuteChefFn"
-                }
-              }
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref ExecuteChefProject
+              InputArtifacts:
+                - Name: CS-260
+            - Name: TestChef
+              RunOrder: 3
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref TestChefProject
+              InputArtifacts:
+                - Name: CS-260
 
         - Name: Production
           Actions:
