@@ -99,16 +99,17 @@ Resources:
             Statement:
               -
                 Effect: Allow
-                Action: 
+                Action:
                   - "workspaces:*"
                   - "ssm:*"
                   - "s3:*"
                   - "ec2:*"
                   - "codepipeline:PutJobSuccessResult"
                   - "codepipeline:PutJobFailureResult"
+                  - "cloudformation:*"
                 Resource: "*"
               -
-                Action: 
+                Action:
                   - "logs:*"
                 Effect: Allow
                 Resource: "arn:aws:logs:*:*:*"
@@ -117,49 +118,41 @@ Resources:
     Properties:
       Code:
         S3Bucket: snhu-chef
-        S3Key: workspace-lambda.zip
+        S3Key: remoteworkspaces.zip
       Handler: remoteworkspaces.launch_workspace
-      Role: !Ref LambdaRole
+      Role: !GetAtt LambdaRole.Arn
       Runtime: python3.6
       Timeout: 300
-      VpcConfig:
-        SecurityGroupIds:
-          - sg-3e270b4f
-        SubnetIds:
-          - subnet-cba53de7
-          - subnet-be2674f6
+  LambdaGetWorkspaceId:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: snhu-chef
+        S3Key: remoteworkspaces.zip
+      Handler: remoteworkspaces.get_workspace_public_ip
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: python3.6
+      Timeout: 300
   LambdaInstallChefFn:
     Type: AWS::Lambda::Function
     Properties:
       Code:
         S3Bucket: snhu-chef
-        S3Key: workspace-lambda.zip
+        S3Key: remoteworkspaces.zip
       Handler: remoteworkspaces.install_chef
-      Role: !Ref LambdaRole
+      Role: !GetAtt LambdaRole.Arn
       Runtime: python3.6
       Timeout: 300
-      VpcConfig:
-        SecurityGroupIds:
-          - sg-3e270b4f
-        SubnetIds:
-          - subnet-cba53de7
-          - subnet-be2674f6
   LambdaExecuteChefFn:
     Type: AWS::Lambda::Function
     Properties:
       Code:
         S3Bucket: snhu-chef
-        S3Key: workspace-lambda.zip
+        S3Key: remoteworkspaces.zip
       Handler: remoteworkspaces.execute_chef
-      Role: !Ref LambdaRole
+      Role: !GetAtt LambdaRole.Arn
       Runtime: python3.6
       Timeout: 300
-      VpcConfig:
-        SecurityGroupIds:
-          - sg-3e270b4f
-        SubnetIds:
-          - subnet-cba53de7
-          - subnet-be2674f6
   MyCodePipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
@@ -185,7 +178,7 @@ Resources:
               OAuthToken: !Ref GitHubToken
         - Name: BuildWorkspace
           Actions:
-          - Name: Workspace Provisioning
+          - Name: WorkspaceProvisioning
             RunOrder: 1
             ActionTypeId:
               Category: Deploy
@@ -204,38 +197,38 @@ Resources:
                         "Arn"
                     ]
                 },
-                "OutputFileName": "WorkspaceOutput.json" 
+                "OutputFileName": "WorkspaceOutput.json"
             }
             InputArtifacts:
               - Name: CS-260
             OutputArtifacts:
               - Name: WorkspaceOutput
-        # - Name: ConfigureWorkspace
-        #   Actions:
-        #   - Name: Install Chef
-        #     RunOrder: 1
-        #     ActionTypeId:
-        #       Category: Invoke
-        #       Owner: AWS
-        #       Version: 1
-        #       Provider: Lambda
-        #     Configuration: {
-        #       "FunctionName": {
-        #         "Ref": "LambdaInstallChefFn"
-        #       }
-        #     }
-        #   - Name: Execute Chef
-        #     RunOrder: 2
-        #     ActionTypeId:
-        #       Category: Invoke
-        #       Owner: AWS
-        #       Version: 1
-        #       Provider: Lambda
-        #     Configuration: {
-        #       "FunctionName": {
-        #         "Ref": "LambdaExecuteChefFn"
-        #       }
-        #     }
+        - Name: ConfigureWorkspace
+          Actions:
+            - Name: InstallChef
+              RunOrder: 1
+              ActionTypeId:
+                Category: Invoke
+                Owner: AWS
+                Version: 1
+                Provider: Lambda
+              Configuration: {
+                "FunctionName": {
+                  "Ref": "LambdaInstallChefFn"
+                 }
+              }
+            - Name: ExecuteChef
+              RunOrder: 2
+              ActionTypeId:
+                Category: Invoke
+                Owner: AWS
+                Version: 1
+                Provider: Lambda
+              Configuration: {
+                "FunctionName": {
+                  "Ref": "LambdaExecuteChefFn"
+                }
+              }
 
         - Name: Production
           Actions:
