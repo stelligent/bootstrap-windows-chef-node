@@ -113,6 +113,21 @@ Resources:
                   - "logs:*"
                 Effect: Allow
                 Resource: "arn:aws:logs:*:*:*"
+  SetupWorkspace:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Description: Codebuild project to set up Workspace
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/python:3.3.6
+      Source:
+        BuildSpec: buildspec_setup_workstation.yml
+        Type: CODEPIPELINE
+      TimeoutInMinutes: 30
   InstallChefProject:
     Type: AWS::CodeBuild::Project
     Properties:
@@ -210,7 +225,7 @@ Resources:
               - Name: WorkspaceOutput
         - Name: ConfigureWorkspace
           Actions:
-            - Name: InstallChef
+            - Name: SetupWorkspace
               RunOrder: 1
               ActionTypeId:
                 Category: Build
@@ -221,8 +236,19 @@ Resources:
                 ProjectName: !Ref InstallChefProject
               InputArtifacts:
                 - Name: CS-260
-            - Name: ExecuteChef
+            - Name: InstallChef
               RunOrder: 2
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref InstallChefProject
+              InputArtifacts:
+                - Name: CS-260
+            - Name: ExecuteChef
+              RunOrder: 3
               ActionTypeId:
                 Category: Build
                 Owner: AWS

@@ -1,0 +1,15 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo Installing pre-reqs
+      - pip3 install boto3
+  build:
+    commands:
+      - echo Started on `date`
+      - echo Enabling AutoStop...
+      - python3 scripts/setup_workspace.py
+  post_build:
+    commands:
+      - echo Workspace Setup completed on `date`

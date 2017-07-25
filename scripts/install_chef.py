@@ -15,6 +15,21 @@ def find_public_ip_of_workspace():
     workspace_public_ip = ec2.describe_network_interfaces(Filters=[{ 'Name' : 'private-ip-address', 'Values' : [workspace_private_ip] }])['NetworkInterfaces'][0]['Association']['PublicIp']
     return workspace_public_ip
 
+def find_id_of_workspace():
+    stack = cloudformation.Stack('WorkspaceBuilder')
+    stack_resource = stack.Resource('workspace1').physical_resource_id
+    return stack_resource
+
+def update_workspace_running_mode():
+    workspace_id = find_id_of_workspace()
+    workspaces.modify_workspace_properties(
+        WorkspaceId=workspace_id,
+        WorkspaceProperties={
+            'RunningMode': 'AUTO_STOP',
+            'RunningModeAutoStopTimeoutInMinutes': 60
+        }
+    )
+
 def install_chef():
     workspaces_username = "chef"
     workspaces_ip = find_public_ip_of_workspace()
