@@ -232,8 +232,11 @@ Resources:
                 ProjectName: !Ref ExecuteChefProject
               InputArtifacts:
                 - Name: CS-260
+            
+        - Name: TestWorkspace
+          Actions:
             - Name: TestChef
-              RunOrder: 3
+              RunOrder: 1
               ActionTypeId:
                 Category: Build
                 Owner: AWS
