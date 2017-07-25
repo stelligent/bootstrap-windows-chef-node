@@ -113,7 +113,7 @@ Resources:
                   - "logs:*"
                 Effect: Allow
                 Resource: "arn:aws:logs:*:*:*"
-  SetupWorkspace:
+  SetupWorkspaceProject:
     Type: AWS::CodeBuild::Project
     Properties:
       Description: Codebuild project to set up Workspace
@@ -233,7 +233,7 @@ Resources:
                 Version: 1
                 Provider: CodeBuild
               Configuration:
-                ProjectName: !Ref InstallChefProject
+                ProjectName: !Ref SetupWorkspaceProject
               InputArtifacts:
                 - Name: CS-260
             - Name: InstallChef
