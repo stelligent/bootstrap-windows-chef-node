@@ -4,7 +4,7 @@ phases:
   install:
     commands:
       - echo Installing pre-reqs
-      - pip3 install boto3 behave sure winrm
+      - pip3 install boto3 behave sure pywinrm
   build:
     commands:
       - echo Started on `date`
