@@ -46,7 +46,7 @@ def step_impl(context):
     formatted_response.should.be.equal("True")
 
 def find_public_ip_of_workspace():
-    cloudformation = boto3.client('cloudformation')
+    cloudformation = boto3.resource('cloudformation')
     stack = cloudformation.stack('WorkspaceBuilder')
     stack_resource = stack.resource('workspace1').physical_resource_id
     workspace_private_ip = workspaces.describe_workspaces(WorkspaceIds=[stack_resource])['Workspaces'][0]['IpAddress']
