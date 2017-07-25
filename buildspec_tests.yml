@@ -8,8 +8,8 @@ phases:
   build:
     commands:
       - echo Started on `date`
-      - echo Installing Chef...
-      - python3 scripts/tests.py
+      - echo Testing Workspace...
+      - behave
   post_build:
     commands:
       - echo Chef Install completed on `date`
