@@ -1,7 +1,7 @@
 {
   "Parameters" : {
-    "ADUser" : "chefbuilder",
-    "BundleId": "wsb-8q4nnw5p6",
-    "DirectoryId": "d-906729fc27"
+    "ADUser" : "demo_admin",
+    "BundleId": "wsb-3t36q0xfc",
+    "DirectoryId": "d-90672ec04c"
   }
 }
