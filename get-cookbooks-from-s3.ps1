@@ -6,7 +6,7 @@ $global:region              = "us-east-1"
 $global:computerName	      = $env:ComputerName
 $global:chefPath	          = "C:\chef"
 $global:cookbooksPath       = $chefPath + "/cookbooks/"
-$global:cookbookBucket	    = "snhu-cookbooks"
+$global:cookbookBucket	    = "workspace-cookbooks"
 $global:chefClientVersion          = "stable"
 
 # Recommended: upload the chef-client cookbook from the chef supermarket  https://supermarket.chef.io/cookbooks/chef-client

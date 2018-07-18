@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Continuous Delivery CodePipeline that automatically  build, tests, deploys the CS-260 Lab Environment
+Description: Continuous Delivery CodePipeline that automatically  build, tests, deploys the CS-230 Lab Environment
 Parameters:
   GitHubToken:
     Type: String
