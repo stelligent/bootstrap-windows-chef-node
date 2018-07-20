@@ -1,6 +1,6 @@
 {
   "Parameters" : {
-    "ADUser" : "demo_admin",
+    "ADUser" : "demo_user",
     "BundleId": "wsb-j5ycb0rsj",
     "DirectoryId": "d-90672e5eb3"
   }
