@@ -31,7 +31,7 @@ def update_workspace_running_mode():
     )
 
 def install_chef():
-    workspaces_username = "chef"
+    workspaces_username = "Chef"
     workspaces_ip = find_public_ip_of_workspace()
     workspaces_password = ssm.get_parameter(Name='chef-winrm-password', WithDecryption=True)['Parameter']['Value']
     access_key = ssm.get_parameter(Name='workspace-user-access-key', WithDecryption=True)['Parameter']['Value']

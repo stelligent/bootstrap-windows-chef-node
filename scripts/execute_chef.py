@@ -9,7 +9,7 @@ workspaces = boto3.client('workspaces')
 cloudformation = boto3.resource('cloudformation')
 
 def execute_chef():
-    workspaces_username = "chef"
+    workspaces_username = "Chef"
     workspaces_ip = find_public_ip_of_workspace()
     workspaces_password = ssm.get_parameter(Name='chef-winrm-password', WithDecryption=True)['Parameter']['Value']
     access_key = ssm.get_parameter(Name='snhu-workspace-user-access-key', WithDecryption=True)['Parameter']['Value']
