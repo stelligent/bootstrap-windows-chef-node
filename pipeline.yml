@@ -146,7 +146,7 @@ Resources:
   ExecuteChefProject:
     Type: AWS::CodeBuild::Project
     Properties:
-      Description: Codebuild project to install Chef on Workspace
+      Description: Codebuild project to execute Chef on Workspace
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Artifacts:
         Type: CODEPIPELINE

@@ -11,7 +11,7 @@ def step_impl(context):
 def step_impl(context):
     client = boto3.client('ssm')
 
-    workspaces_username = "chef"
+    workspaces_username = "Chef"
     workspaces_ip = find_public_ip_of_workspace()
     workspaces_password = client.get_parameter(Name='chef-winrm-password', WithDecryption=True)['Parameter']['Value']
 
@@ -30,7 +30,7 @@ def step_impl(context):
 def step_impl(context):
     client = boto3.client('ssm')
 
-    workspaces_username = "chef"
+    workspaces_username = "Chef"
     workspaces_ip = find_public_ip_of_workspace()
     workspaces_password = client.get_parameter(Name='chef-winrm-password', WithDecryption=True)['Parameter']['Value']
 

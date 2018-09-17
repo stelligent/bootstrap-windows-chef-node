@@ -48,10 +48,10 @@ class Session(object):
         # must use utf16 little endian on windows
         encoded_ps = b64encode(script.encode('utf_16_le')).decode('ascii')
         rs = self.run_cmd('powershell -encodedcommand {0}'.format(encoded_ps))
-        # if len(rs.std_err):
+        if len(rs.std_err):
             # if there was an error message, clean it it up and make it human
             # readable
-            # rs.std_err = self._clean_error_msg(rs.std_err)
+            rs.std_err = self._clean_error_msg(rs.std_err)
         return rs
 
     def _clean_error_msg(self, msg):
@@ -59,7 +59,7 @@ class Session(object):
         """
         # TODO prepare unit test, beautify code
         # if the msg does not start with this, return it as is
-        if msg.startswith("#< CLIXML\r\n"):
+        if msg.startswith(b"#< CLIXML\r\n"):
             # for proper xml, we need to remove the CLIXML part
             # (the first line)
             msg_xml = msg[11:]

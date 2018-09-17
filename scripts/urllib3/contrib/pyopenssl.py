@@ -47,6 +47,12 @@ import OpenSSL.SSL
 from cryptography import x509
 from cryptography.hazmat.backends.openssl import backend as openssl_backend
 from cryptography.hazmat.backends.openssl.x509 import _Certificate
+try:
+    from cryptography.x509 import UnsupportedExtension
+except ImportError:
+    # UnsupportedExtension is gone in cryptography >= 2.1.0
+    class UnsupportedExtension(Exception):
+        pass
 
 from socket import timeout, error as SocketError
 from io import BytesIO
@@ -59,7 +65,7 @@ except ImportError:  # Platform-specific: Python 3
 
 import logging
 import ssl
-import six
+from ..packages import six
 import sys
 
 from .. import util
@@ -183,9 +189,12 @@ def get_subj_alt_name(peer_cert):
     Given an PyOpenSSL certificate, provides all the subject alternative names.
     """
     # Pass the cert to cryptography, which has much better APIs for this.
-    # This is technically using private APIs, but should work across all
-    # relevant versions until PyOpenSSL gets something proper for this.
-    cert = _Certificate(openssl_backend, peer_cert._x509)
+    if hasattr(peer_cert, "to_cryptography"):
+        cert = peer_cert.to_cryptography()
+    else:
+        # This is technically using private APIs, but should work across all
+        # relevant versions before PyOpenSSL got a proper API for this.
+        cert = _Certificate(openssl_backend, peer_cert._x509)
 
     # We want to find the SAN extension. Ask Cryptography to locate it (it's
     # faster than looping in Python)
@@ -196,7 +205,7 @@ def get_subj_alt_name(peer_cert):
     except x509.ExtensionNotFound:
         # No such extension, return the empty list.
         return []
-    except (x509.DuplicateExtension, x509.UnsupportedExtension,
+    except (x509.DuplicateExtension, UnsupportedExtension,
             x509.UnsupportedGeneralNameType, UnicodeError) as e:
         # A problem has been found with the quality of the certificate. Assume
         # no SAN field is present.
@@ -264,8 +273,7 @@ class WrappedSocket(object):
             else:
                 raise
         except OpenSSL.SSL.WantReadError:
-            rd = util.wait_for_read(self.socket, self.socket.gettimeout())
-            if not rd:
+            if not util.wait_for_read(self.socket, self.socket.gettimeout()):
                 raise timeout('The read operation timed out')
             else:
                 return self.recv(*args, **kwargs)
@@ -286,8 +294,7 @@ class WrappedSocket(object):
             else:
                 raise
         except OpenSSL.SSL.WantReadError:
-            rd = util.wait_for_read(self.socket, self.socket.gettimeout())
-            if not rd:
+            if not util.wait_for_read(self.socket, self.socket.gettimeout()):
                 raise timeout('The read operation timed out')
             else:
                 return self.recv_into(*args, **kwargs)
@@ -300,8 +307,7 @@ class WrappedSocket(object):
             try:
                 return self.connection.send(data)
             except OpenSSL.SSL.WantWriteError:
-                wr = util.wait_for_write(self.socket, self.socket.gettimeout())
-                if not wr:
+                if not util.wait_for_write(self.socket, self.socket.gettimeout()):
                     raise timeout()
                 continue
             except OpenSSL.SSL.SysCallError as e:
@@ -415,7 +421,7 @@ class PyOpenSSLContext(object):
             self._ctx.load_verify_locations(BytesIO(cadata))
 
     def load_cert_chain(self, certfile, keyfile=None, password=None):
-        self._ctx.use_certificate_file(certfile)
+        self._ctx.use_certificate_chain_file(certfile)
         if password is not None:
             self._ctx.set_passwd_cb(lambda max_length, prompt_twice, userdata: password)
         self._ctx.use_privatekey_file(keyfile or certfile)
@@ -437,8 +443,7 @@ class PyOpenSSLContext(object):
             try:
                 cnx.do_handshake()
             except OpenSSL.SSL.WantReadError:
-                rd = util.wait_for_read(sock, sock.gettimeout())
-                if not rd:
+                if not util.wait_for_read(sock, sock.gettimeout()):
                     raise timeout('select timed out')
                 continue
             except OpenSSL.SSL.Error as e:
