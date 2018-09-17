@@ -12,11 +12,11 @@ def execute_chef():
     workspaces_username = "Chef"
     workspaces_ip = find_public_ip_of_workspace()
     workspaces_password = ssm.get_parameter(Name='chef-winrm-password', WithDecryption=True)['Parameter']['Value']
-    access_key = ssm.get_parameter(Name='snhu-workspace-user-access-key', WithDecryption=True)['Parameter']['Value']
-    secret_access_key = ssm.get_parameter(Name='snhu-workspace-user-secret-key', WithDecryption=True)['Parameter']['Value']
+    access_key = ssm.get_parameter(Name='workspace-user-access-key', WithDecryption=True)['Parameter']['Value']
+    secret_access_key = ssm.get_parameter(Name='workspace-user-secret-key', WithDecryption=True)['Parameter']['Value']
     chef_path = "C:\chef"
     cookbooks_path = "C:\chef\cookbooks"
-    cookbooks_bucket = "snhu-chef"
+    cookbooks_bucket = "workspaces-cookbooks-us-west-2"
 
     command ="""
     Set-ExecutionPolicy RemoteSigned -force
